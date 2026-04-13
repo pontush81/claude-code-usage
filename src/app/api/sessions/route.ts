@@ -36,6 +36,27 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, url: blob.url });
 }
 
+// DELETE /api/sessions?id=<session_id> — delete a session
+export async function DELETE(req: NextRequest) {
+  if (!checkAuth(req)) return unauthorized();
+
+  const sessionId = req.nextUrl.searchParams.get("id");
+  if (!sessionId) {
+    return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
+  }
+
+  const existing = await list({ prefix: "sessions/", limit: 1000 });
+  let deleted = 0;
+  for (const blob of existing.blobs) {
+    if (blob.pathname.includes(sessionId)) {
+      await del(blob.url);
+      deleted++;
+    }
+  }
+
+  return NextResponse.json({ ok: true, deleted });
+}
+
 // GET /api/sessions — list all sessions (public read)
 export async function GET() {
 
