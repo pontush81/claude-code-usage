@@ -1,4 +1,4 @@
-import { list, put } from "@vercel/blob";
+import { del, list, put } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 
 function unauthorized() {
@@ -10,14 +10,22 @@ function checkAuth(req: NextRequest): boolean {
   return !!key && key === process.env.API_KEY;
 }
 
-// POST /api/sessions — store a single session entry
+// POST /api/sessions — store or update a session entry
 export async function POST(req: NextRequest) {
   if (!checkAuth(req)) return unauthorized();
 
   const body = await req.json();
   const sessionId = body.session_id || "unknown";
-  const timestamp = body.timestamp || new Date().toISOString();
-  const name = `sessions/${timestamp}_${sessionId}.json`;
+
+  // Delete any existing blob for this session (upsert)
+  const existing = await list({ prefix: "sessions/", limit: 1000 });
+  for (const blob of existing.blobs) {
+    if (blob.pathname.includes(sessionId)) {
+      await del(blob.url);
+    }
+  }
+
+  const name = `sessions/${sessionId}.json`;
 
   const blob = await put(name, JSON.stringify(body), {
     contentType: "application/json",
