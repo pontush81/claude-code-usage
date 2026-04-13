@@ -41,7 +41,14 @@ function fmtUsd(n: number) {
 
 function shortDate(iso: string) {
   if (!iso) return "-";
-  return iso.slice(0, 19).replace("T", " ");
+  return new Date(iso).toLocaleString("sv-SE", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 export default function Dashboard() {
@@ -107,7 +114,7 @@ export default function Dashboard() {
       }
       map[s.org_name].cost += s.cost_usd;
       map[s.org_name].sessions += 1;
-      map[s.org_name].input += s.tokens.input + s.tokens.cache_read;
+      map[s.org_name].input += s.tokens.input;
       map[s.org_name].output += s.tokens.output;
     }
     return map;
@@ -296,7 +303,7 @@ export default function Dashboard() {
                   </td>
                   <td className="px-4 py-2.5 text-slate-400">{s.plan}</td>
                   <td className="px-4 py-2.5 text-slate-300">{Object.keys(s.models).join(", ")}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums">{fmt(s.tokens.input + s.tokens.cache_read)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums">{fmt(s.tokens.input)}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums">{fmt(s.tokens.output)}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums text-slate-400">{fmt(s.tokens.cache_write)}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums text-slate-400">{fmt(s.tokens.cache_read)}</td>
