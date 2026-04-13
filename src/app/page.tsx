@@ -55,31 +55,23 @@ export default function Dashboard() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState("");
   const [filterOrg, setFilterOrg] = useState("");
   const [filterModel, setFilterModel] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem("cc-usage-api-key");
-    if (saved) {
-      setApiKey(saved);
-      loadData(saved);
-    } else {
-      setLoading(false);
-    }
+    loadData();
   }, []);
 
-  async function loadData(key: string) {
+  async function loadData() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/sessions?key=${encodeURIComponent(key)}`);
-      if (!res.ok) throw new Error("Unauthorized");
+      const res = await fetch("/api/sessions");
+      if (!res.ok) throw new Error("Kunde inte ladda data");
       const data = await res.json();
       setSessions(data);
-      localStorage.setItem("cc-usage-api-key", key);
     } catch {
-      setError("Kunde inte ladda data. Kontrollera API-nyckeln.");
+      setError("Kunde inte ladda data.");
     } finally {
       setLoading(false);
     }
@@ -122,42 +114,6 @@ export default function Dashboard() {
 
   const totalCost = sessions.reduce((sum, s) => sum + s.cost_usd, 0);
 
-  if (!apiKey || error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-950">
-        <div className="bg-slate-900 rounded-xl p-8 max-w-sm w-full">
-          <h1 className="text-xl font-bold text-white mb-2">Claude Code Usage</h1>
-          <p className="text-slate-400 text-sm mb-6">Ange din API-nyckel.</p>
-          {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const key = (
-                (e.target as HTMLFormElement).elements.namedItem("key") as HTMLInputElement
-              ).value;
-              setApiKey(key);
-              loadData(key);
-            }}
-          >
-            <input
-              name="key"
-              type="password"
-              placeholder="API-nyckel"
-              className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg px-4 py-2 mb-4 text-sm"
-              defaultValue={apiKey}
-            />
-            <button
-              type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg px-4 py-2 text-sm"
-            >
-              Visa dashboard
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950">
@@ -169,21 +125,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold">Claude Code Usage</h1>
-            <p className="text-slate-400 text-sm">{sessions.length} sessioner</p>
-          </div>
-          <button
-            onClick={() => {
-              localStorage.removeItem("cc-usage-api-key");
-              setApiKey("");
-              setSessions([]);
-            }}
-            className="text-slate-500 hover:text-slate-300 text-sm"
-          >
-            Logga ut
-          </button>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold">Claude Code Usage</h1>
+          <p className="text-slate-400 text-sm">{sessions.length} sessioner</p>
+          {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">

@@ -28,10 +28,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, url: blob.url });
 }
 
-// GET /api/sessions — list all sessions
-export async function GET(req: NextRequest) {
-  const key = req.nextUrl.searchParams.get("key");
-  if (!key || key !== process.env.API_KEY) return unauthorized();
+// GET /api/sessions — list all sessions (public read)
+export async function GET() {
 
   const sessions = [];
   let cursor: string | undefined;
